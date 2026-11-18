@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Mi perfil — AulaCompartida{% endblock %}
+
+{% block content %}
+<section class="max-w-4xl mx-auto px-4 py-8">
+  <h1 class="text-3xl font-bold text-gray-900 mb-2">Hola, {{ user.first_name|default:user.email }}</h1>
+  <p class="text-gray-600 mb-8">Bienvenido a tu panel personal.</p>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <h2 class="text-lg font-semibold text-gray-900 mb-3">Tu cuenta</h2>
+      <dl class="text-sm space-y-2">
+        <div><dt class="text-gray-500">Correo</dt><dd class="font-medium">{{ user.email }}</dd></div>
+        <div><dt class="text-gray-500">Usuario</dt><dd class="font-medium">{{ user.username }}</dd></div>
+        <div><dt class="text-gray-500">Rol</dt><dd class="font-medium">{{ user.get_rol_display }}</dd></div>
+      </dl>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between">
+      <div>
+        <h2 class="text-lg font-semibold text-gray-900 mb-2">Explorar recursos</h2>
+        <p class="text-sm text-gray-600">Busca materiales compartidos por la comunidad.</p>
+      </div>
+      <a href="{% url 'core:search' %}" class="mt-4 inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-4 py-2 text-center">
+        Explorar recursos
+      </a>
+    </div>
+  </div>
+</section>
+{% endblock %}

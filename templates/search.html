@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}Buscar recursos — AulaCompartida{% endblock %}
+
+{% block content %}
+<section class="max-w-6xl mx-auto px-4 py-8">
+  <h1 class="text-2xl font-bold text-gray-900 mb-6">Buscar recursos</h1>
+
+  <form method="get" class="grid grid-cols-1 md:grid-cols-5 gap-3 mb-8 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+    <input type="text" name="q" value="{{ filtros.q }}" placeholder="Palabra clave…"
+           class="md:col-span-2 rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+
+    <select name="carrera" class="rounded-lg border border-gray-300 px-3 py-2">
+      <option value="">Carrera</option>
+      {% for c in carreras %}
+        <option value="{{ c.id }}" {% if filtros.carrera == c.id|stringformat:'s' %}selected{% endif %}>{{ c.nombre }}</option>
+      {% endfor %}
+    </select>
+
+    <select name="asignatura" class="rounded-lg border border-gray-300 px-3 py-2">
+      <option value="">Asignatura</option>
+      {% for a in asignaturas %}
+        <option value="{{ a.id }}" {% if filtros.asignatura == a.id|stringformat:'s' %}selected{% endif %}>{{ a.nombre }}</option>
+      {% endfor %}
+    </select>
+
+    <select name="tipo" class="rounded-lg border border-gray-300 px-3 py-2">
+      <option value="">Tipo</option>
+      {% for value, label in tipos %}
+        <option value="{{ value }}" {% if filtros.tipo == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+
+    <div class="md:col-span-5 flex flex-wrap gap-3 items-center justify-between">
+      <select name="orden" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+        <option value="recientes" {% if filtros.orden == 'recientes' %}selected{% endif %}>Más recientes</option>
+        <option value="antiguos" {% if filtros.orden == 'antiguos' %}selected{% endif %}>Más antiguos</option>
+        <option value="valorados" {% if filtros.orden == 'valorados' %}selected{% endif %}>Mejor valorados</option>
+        <option value="descargados" {% if filtros.orden == 'descargados' %}selected{% endif %}>Más descargados</option>
+      </select>
+      <div class="flex gap-2">
+        <a href="{% url 'core:search' %}" class="text-sm text-gray-500 hover:text-gray-800 px-3 py-2">Limpiar</a>
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-5 py-2">
+          Buscar
+        </button>
+      </div>
+    </div>
+  </form>
+
+  <p class="text-sm text-gray-500 mb-4">
+    {{ paginator.count }} resultado{{ paginator.count|pluralize }} encontrado{{ paginator.count|pluralize }}
+  </p>
+
+  {% if recursos %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {% for recurso in recursos %}
+        {% include 'partials/recurso_card.html' with recurso=recurso %}
+      {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+      <nav class="flex justify-center gap-2 mt-10">
+        {% if page_obj.has_previous %}
+          <a href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}"
+             class="px-3 py-2 rounded-lg border border-gray-300 text-sm hover:bg-gray-50">← Anterior</a>
+        {% endif %}
+        <span class="px-3 py-2 text-sm text-gray-700">
+          Página {{ page_obj.number }} de {{ paginator.num_pages }}
+        </span>
+        {% if page_obj.has_next %}
+          <a href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}"
+             class="px-3 py-2 rounded-lg border border-gray-300 text-sm hover:bg-gray-50">Siguiente →</a>
+        {% endif %}
+      </nav>
+    {% endif %}
+  {% else %}
+    <div class="bg-white rounded-xl border border-dashed border-gray-300 p-12 text-center">
+      <p class="text-gray-500">No se encontraron recursos con esos filtros.</p>
+      <a href="{% url 'core:search' %}" class="inline-block mt-4 text-blue-600 hover:text-blue-800 font-medium">
+        Limpiar filtros
+      </a>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

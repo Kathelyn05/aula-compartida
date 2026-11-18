@@ -1,6 +1,6 @@
   <nav class="sticky top-0 z-40 border-b border-slate-200 bg-white shadow-sm">
     <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-      <a href="{% url 'home' %}" class="text-xl font-bold text-blue-600">AulaCompartida</a>
+      <a href="{% url 'core:home' %}" class="text-xl font-bold text-blue-600">AulaCompartida</a>
 
       <div id="profile-container" class="relative">
         <button
@@ -26,7 +26,7 @@
             <div class="border-b border-gray-100 px-4 py-2 text-sm text-gray-500">
               Hola, <span class="font-semibold text-gray-900">{{ user.first_name|default:user.email }}</span>
             </div>
-            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Mi perfil</a>
+            <a href="{% url 'perfil' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Mi perfil</a>
             <form method="post" action="{% url 'logout' %}">
               {% csrf_token %}
               <button type="submit" class="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50">
