@@ -29,9 +29,8 @@
         <span class="text-gray-400">Sin valorar</span>
       {% endif %}
     </div>
-    <a href="#"
-       class="text-sm font-medium text-blue-600 hover:text-blue-800"
-       {# TODO: cuando B cree la vista, cambiar a {% url 'resources:recurso_detail' recurso.pk %} #}>
+    <a href="{% url 'resources:recurso_detalle' recurso.pk %}"
+       class="text-sm font-medium text-blue-600 hover:text-blue-800">
       Ver detalle →
     </a>
   </div>

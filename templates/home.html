@@ -35,16 +35,10 @@
     </div>
   {% else %}
     <div class="bg-white rounded-xl border border-dashed border-gray-300 p-12 text-center">
-      <p class="text-gray-500">Aún no hay recursos publicados.</p>
-      {% if user.is_authenticated %}
-        <a href="#" class="inline-block mt-4 text-blue-600 hover:text-blue-800 font-medium">
-          Publica el primero →
-        </a>
-      {% else %}
-        <a href="{% url 'register' %}" class="inline-block mt-4 text-blue-600 hover:text-blue-800 font-medium">
-          Regístrate para publicar →
-        </a>
-      {% endif %}
+      <p class="text-gray-500 mb-4">Aún no hay recursos publicados.</p>
+      <a href="{% url 'resources:recurso_create' %}" class="inline-block rounded-lg bg-blue-600 px-5 py-2.5 font-medium text-white hover:bg-blue-700">
+        Publica el primero →
+      </a>
     </div>
   {% endif %}
 </section>

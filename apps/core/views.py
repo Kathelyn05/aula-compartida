@@ -1,8 +1,20 @@
+import unicodedata
+
 from django.db.models import Avg, Count, Q
 from django.views.generic import ListView, TemplateView
 
 from apps.academic.models import AnoAcademico, Asignatura, Carrera
 from apps.resources.models import Recurso
+
+
+def _normalizar(texto):
+    if not texto:
+        return ''
+    texto = str(texto).lower()
+    return ''.join(
+        c for c in unicodedata.normalize('NFD', texto)
+        if unicodedata.category(c) != 'Mn'
+    )
 
 
 class HomeView(TemplateView):
@@ -46,14 +58,6 @@ class RecursoListView(ListView):
             .annotate(promedio=Avg('valoraciones__puntuacion'))
         )
 
-        q = self.request.GET.get('q', '').strip()
-        if q:
-            qs = qs.filter(
-                Q(titulo__icontains=q)
-                | Q(descripcion__icontains=q)
-                | Q(asignatura__nombre__icontains=q)
-            )
-
         carrera_id = self.request.GET.get('carrera', '').strip()
         if carrera_id.isdigit():
             qs = qs.filter(asignatura__ano__carrera_id=carrera_id)
@@ -71,6 +75,25 @@ class RecursoListView(ListView):
             qs = qs.filter(tipo=tipo)
 
         orden = self.request.GET.get('orden', 'recientes')
+        q = self.request.GET.get('q', '').strip()
+        if q:
+            nq = _normalizar(q)
+            resultados = [
+                r for r in qs
+                if nq in _normalizar(r.titulo)
+                or nq in _normalizar(r.descripcion)
+                or nq in _normalizar(r.asignatura.nombre)
+            ]
+            if orden == 'antiguos':
+                resultados.sort(key=lambda r: r.fecha_creacion)
+            elif orden == 'valorados':
+                resultados.sort(key=lambda r: (r.promedio or 0, r.fecha_creacion), reverse=True)
+            elif orden == 'descargados':
+                resultados.sort(key=lambda r: (r.contador_descargas, r.fecha_creacion), reverse=True)
+            else:
+                resultados.sort(key=lambda r: r.fecha_creacion, reverse=True)
+            return resultados
+
         if orden == 'antiguos':
             qs = qs.order_by('fecha_creacion')
         elif orden == 'valorados':
