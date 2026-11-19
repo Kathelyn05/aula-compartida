@@ -2,11 +2,12 @@ import hashlib
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError, transaction
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
-from django.views.generic import DetailView
+from django.views.generic import DetailView, UpdateView
 
 from .forms import RecursoForm
 from .models import Archivo, Recurso
@@ -18,6 +19,19 @@ def calcular_hash_sha256(uploaded_file):
         sha.update(chunk)
     uploaded_file.seek(0)
     return sha.hexdigest()
+
+
+class RecursoEditForm(RecursoForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['archivo'].required = False
+        self.fields['archivo'].help_text = 'Deja vacío para mantener el archivo actual.'
+
+    def clean_archivo(self):
+        archivo = self.cleaned_data.get('archivo')
+        if not archivo:
+            return None
+        return super().clean_archivo()
 
 
 class RecursoCreateView(LoginRequiredMixin, View):
@@ -65,6 +79,39 @@ class RecursoCreateView(LoginRequiredMixin, View):
                 'Ya existe un archivo idéntico en el sistema. ¿Seguro que quieres publicarlo de nuevo?',
             )
         return redirect('core:home')
+
+
+class RecursoUpdateView(LoginRequiredMixin, UpdateView):
+    model = Recurso
+    form_class = RecursoEditForm
+    template_name = 'resources/recurso_editar.html'
+
+    def get_object(self, queryset=None):
+        recurso = super().get_object(queryset)
+        if recurso.autor_id != self.request.user.pk:
+            raise PermissionDenied
+        return recurso
+
+    def form_valid(self, form):
+        archivo = form.cleaned_data.get('archivo')
+        with transaction.atomic():
+            recurso = form.save()
+            if archivo:
+                hash_sha256 = calcular_hash_sha256(archivo)
+                archivo_anterior = recurso.archivos.first()
+                if archivo_anterior:
+                    archivo_anterior.archivo.delete(save=False)
+                    archivo_anterior.delete()
+                Archivo.objects.create(
+                    recurso=recurso,
+                    archivo=archivo,
+                    nombre_original=archivo.name,
+                    tipo_mime=getattr(archivo, 'content_type', '') or '',
+                    tamano_bytes=archivo.size or 0,
+                    hash_sha256=hash_sha256,
+                )
+        messages.success(self.request, 'Recurso actualizado correctamente')
+        return redirect('resources:recurso_detalle', pk=recurso.pk)
 
 
 class RecursoDetailView(DetailView):
