@@ -77,5 +77,27 @@
   <div class="mt-4">
     <a href="{% url 'core:search' %}" class="text-blue-600 hover:text-blue-800">← Volver a la búsqueda</a>
   </div>
+
+  <div class="mt-6">
+    {% include 'interactions/valoracion_widget.html' with promedio=recurso.promedio total_valoraciones=recurso.valoraciones.count %}
+  </div>
+
+  <div class="mt-4">
+    {% include 'interactions/favorito_boton.html' %}
+  </div>
+
+  <div class="mt-6 space-y-4">
+    {% include 'interactions/comentarios_lista.html' %}
+    {% include 'interactions/comentario_form.html' %}
+  </div>
+
+  {% if user.is_authenticated %}
+    <details class="mt-6 text-sm text-gray-500">
+      <summary class="cursor-pointer hover:text-gray-700">Reportar recurso</summary>
+      <div class="mt-3">
+        {% include 'interactions/reporte_form.html' %}
+      </div>
+    </details>
+  {% endif %}
 </section>
 {% endblock %}
