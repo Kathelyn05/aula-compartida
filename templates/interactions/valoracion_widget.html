@@ -1,0 +1,53 @@
+{% load interaction_tags %}
+{% datos_interacciones recurso as datos %}
+<section class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+  <h2 class="text-lg font-semibold text-gray-900">Valoraciones</h2>
+
+  {% include 'interactions/messages.html' with tag='valoracion' %}
+
+  <div class="mt-2 flex flex-wrap items-center gap-3">
+    <span class="text-amber-400 tracking-widest" aria-hidden="true">
+      {% with promedio_entero=datos.promedio|floatformat:0 %}
+        {% for estrella in "12345" %}
+          {% if estrella <= promedio_entero %}★{% else %}☆{% endif %}
+        {% endfor %}
+      {% endwith %}
+    </span>
+    <span class="text-sm font-medium text-gray-900">
+      {% if datos.promedio %}{{ datos.promedio|floatformat:1 }}{% else %}Sin valorar{% endif %}
+    </span>
+    <span class="text-sm text-gray-500">
+      {{ datos.total_valoraciones }} valoración{{ datos.total_valoraciones|pluralize:"es" }}
+    </span>
+  </div>
+
+  {% if user.is_authenticated %}
+    <form method="post" action="{% url 'interactions:valorar' recurso.id %}" class="mt-5 space-y-3 border-t border-gray-100 pt-5">
+      {% csrf_token %}
+
+      <label for="{{ datos.valoracion_form.puntuacion.id_for_label }}" class="block text-sm font-medium text-gray-700">
+        Tu puntuación{% if datos.puntuacion_usuario %} (actual: {{ datos.puntuacion_usuario }}){% endif %}
+      </label>
+      <select name="puntuacion" id="{{ datos.valoracion_form.puntuacion.id_for_label }}"
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
+        {% for valor, etiqueta in datos.valoracion_form.puntuacion.field.choices %}
+          {% if valor %}
+            <option value="{{ valor }}" {% if datos.valoracion_form.puntuacion.value|stringformat:"s" == valor|stringformat:"s" %}selected{% elif datos.puntuacion_usuario|stringformat:"s" == valor|stringformat:"s" %}selected{% endif %}>{{ etiqueta }}</option>
+          {% endif %}
+        {% endfor %}
+      </select>
+      {% for error in datos.valoracion_form.puntuacion.errors %}
+        <p class="text-sm text-red-600">{{ error }}</p>
+      {% endfor %}
+
+      <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-4 py-2">
+        {% if datos.puntuacion_usuario %}Actualizar valoración{% else %}Valorar{% endif %}
+      </button>
+    </form>
+  {% else %}
+    <p class="mt-5 border-t border-gray-100 pt-5 text-sm text-gray-600">
+      Inicia sesión para valorar.
+      <a href="{% url 'login' %}" class="text-blue-600 hover:text-blue-800">Iniciar sesión</a>
+    </p>
+  {% endif %}
+</section>

@@ -1,0 +1,7 @@
+{% for message in messages %}
+  {% if not tag or tag in message.tags %}
+    <div class="mb-3 rounded-lg border px-4 py-2 text-sm {% if message.level_tag == 'error' %}border-red-200 bg-red-50 text-red-800{% elif message.level_tag == 'success' %}border-green-200 bg-green-50 text-green-800{% else %}border-blue-200 bg-blue-50 text-blue-800{% endif %}">
+      {{ message }}
+    </div>
+  {% endif %}
+{% endfor %}
