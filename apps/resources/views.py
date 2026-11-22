@@ -3,7 +3,8 @@ import hashlib
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import IntegrityError, transaction
-from django.db.models import Avg
+from django.db.models import Avg, F
+from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
 from django.views.generic import DetailView
@@ -91,3 +92,26 @@ class RecursoDetailView(DetailView):
             Recurso.Estado.RECHAZADO,
         )
         return self.render_to_response(context)
+
+
+class ArchivoDownloadView(View):
+    def get(self, request, pk):
+        archivo = get_object_or_404(Archivo.objects.select_related('recurso'), pk=pk)
+        if archivo.recurso.estado in (Recurso.Estado.RETIRADO, Recurso.Estado.RECHAZADO):
+            raise Http404
+
+        try:
+            contenido = archivo.archivo.open('rb')
+        except (FileNotFoundError, OSError):
+            raise Http404
+
+        Recurso.objects.filter(pk=archivo.recurso_id).update(
+            contador_descargas=F('contador_descargas') + 1
+        )
+
+        return FileResponse(
+            contenido,
+            as_attachment=True,
+            filename=archivo.nombre_original or archivo.archivo.name.split('/')[-1],
+            content_type=archivo.tipo_mime or 'application/octet-stream',
+        )
