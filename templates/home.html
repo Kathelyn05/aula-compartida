@@ -49,9 +49,9 @@
   <h2 class="text-2xl font-bold text-gray-900 mb-6">Explora por carrera</h2>
   <div class="flex flex-wrap gap-3">
     {% for carrera in carreras %}
-      <span class="px-4 py-2 rounded-full bg-white border border-gray-200 text-sm text-gray-700 hover:border-blue-400 hover:text-blue-700 transition cursor-default">
+      <a href="{% url 'academic:carrera_detail' carrera.pk %}" class="px-4 py-2 rounded-full bg-white border border-gray-200 text-sm text-gray-700 hover:border-blue-400 hover:text-blue-700 hover:bg-blue-50 transition cursor-pointer">
         {{ carrera.nombre }}
-      </span>
+      </a>
     {% endfor %}
   </div>
 </section>

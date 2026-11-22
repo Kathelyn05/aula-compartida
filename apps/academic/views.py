@@ -1,5 +1,7 @@
-from django.db.models import Prefetch
+from django.db.models import Avg, Prefetch
 from django.views.generic import DetailView, ListView
+
+from apps.resources.models import Recurso
 
 from .models import AnoAcademico, Asignatura, Carrera
 
@@ -40,5 +42,32 @@ class CarreraDetailView(DetailView):
                 )
             )
             .order_by('numero')
+        )
+        return context
+
+
+class AsignaturaDetailView(DetailView):
+    model = Asignatura
+    context_object_name = 'asignatura'
+    template_name = 'academic/asignatura_detail.html'
+    queryset = Asignatura.objects.filter(activa=True).select_related(
+        'ano', 'ano__carrera', 'ano__carrera__universidad'
+    )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['recursos'] = (
+            Recurso.objects.filter(
+                asignatura=self.object,
+                estado=Recurso.Estado.APROBADO,
+            )
+            .select_related(
+                'asignatura',
+                'asignatura__ano',
+                'asignatura__ano__carrera',
+                'autor',
+            )
+            .annotate(promedio=Avg('valoraciones__puntuacion'))
+            .order_by('-fecha_creacion')
         )
         return context
