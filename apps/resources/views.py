@@ -1,13 +1,14 @@
 import hashlib
 
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError, transaction
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse_lazy
 from django.views import View
-from django.views.generic import DetailView, UpdateView
+from django.views.generic import DeleteView, DetailView, ListView, UpdateView
 
 from .forms import RecursoForm
 from .models import Archivo, Recurso
@@ -32,6 +33,20 @@ class RecursoEditForm(RecursoForm):
         if not archivo:
             return None
         return super().clean_archivo()
+
+
+class MisRecursosView(LoginRequiredMixin, ListView):
+    model = Recurso
+    template_name = 'resources/mis_recursos.html'
+    context_object_name = 'recursos'
+
+    def get_queryset(self):
+        return (
+            Recurso.objects
+            .filter(autor=self.request.user)
+            .select_related('asignatura', 'asignatura__ano', 'asignatura__ano__carrera')
+            .order_by('-fecha_creacion')
+        )
 
 
 class RecursoCreateView(LoginRequiredMixin, View):
@@ -112,6 +127,22 @@ class RecursoUpdateView(LoginRequiredMixin, UpdateView):
                 )
         messages.success(self.request, 'Recurso actualizado correctamente')
         return redirect('resources:recurso_detalle', pk=recurso.pk)
+
+
+class RecursoDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Recurso
+    template_name = 'resources/recurso_confirm_delete.html'
+    success_url = reverse_lazy('core:home')
+
+    def test_func(self):
+        recurso = self.get_object()
+        return self.request.user == recurso.autor
+
+    def form_valid(self, form):
+        for archivo in self.object.archivos.all():
+            archivo.archivo.delete(save=False)
+        messages.success(self.request, 'Recurso eliminado')
+        return super().form_valid(form)
 
 
 class RecursoDetailView(DetailView):

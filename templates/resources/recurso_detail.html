@@ -13,6 +13,8 @@
         <span class="text-sm text-gray-500">{{ recurso.fecha_creacion|date:"d M Y" }}</span>
         {% if user == recurso.autor %}
           <a href="{% url 'resources:recurso_editar' recurso.pk %}" class="text-sm font-medium text-blue-600 hover:text-blue-800">Editar</a>
+          <a href="{% url 'resources:recurso_borrar' recurso.pk %}"
+             class="btn btn-danger bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg px-4 py-2">Eliminar</a>
         {% endif %}
       </div>
     </div>

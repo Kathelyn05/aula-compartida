@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Mis recursos — AulaCompartida{% endblock %}
+
+{% block content %}
+<section class="max-w-6xl mx-auto px-4 py-8">
+  <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">Mis recursos</h1>
+    <a href="{% url 'resources:recurso_create' %}" class="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-4 py-2">
+      Publicar recurso
+    </a>
+  </div>
+
+  {% if recursos %}
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <table class="min-w-full text-sm">
+        <thead class="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+          <tr>
+            <th class="px-4 py-3 font-medium">Título</th>
+            <th class="px-4 py-3 font-medium">Asignatura</th>
+            <th class="px-4 py-3 font-medium">Estado</th>
+            <th class="px-4 py-3 font-medium">Fecha</th>
+            <th class="px-4 py-3 font-medium">Descargas</th>
+            <th class="px-4 py-3 font-medium">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          {% for recurso in recursos %}
+            <tr>
+              <td class="px-4 py-3 font-medium text-gray-900">{{ recurso.titulo }}</td>
+              <td class="px-4 py-3 text-gray-600">{{ recurso.asignatura.nombre }}</td>
+              <td class="px-4 py-3">
+                {% if recurso.estado == 'aprobado' %}
+                  <span class="inline-block text-xs font-medium px-2 py-1 rounded-full bg-green-100 text-green-700">Aprobado</span>
+                {% elif recurso.estado == 'pendiente' %}
+                  <span class="inline-block text-xs font-medium px-2 py-1 rounded-full bg-yellow-100 text-yellow-700">Pendiente</span>
+                {% elif recurso.estado == 'rechazado' %}
+                  <span class="inline-block text-xs font-medium px-2 py-1 rounded-full bg-red-100 text-red-700">Rechazado</span>
+                {% else %}
+                  <span class="inline-block text-xs font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-700">{{ recurso.get_estado_display }}</span>
+                {% endif %}
+              </td>
+              <td class="px-4 py-3 text-gray-600">{{ recurso.fecha_creacion|date:"d/m/Y" }}</td>
+              <td class="px-4 py-3 text-gray-600">{{ recurso.contador_descargas }}</td>
+              <td class="px-4 py-3">
+                <div class="flex flex-wrap gap-2">
+                  <a href="{% url 'resources:recurso_detalle' recurso.pk %}" class="text-sm font-medium text-blue-600 hover:text-blue-800">Ver</a>
+                  <a href="{% url 'resources:recurso_editar' recurso.pk %}" class="text-sm font-medium text-blue-600 hover:text-blue-800">Editar</a>
+                  <a href="{% url 'resources:recurso_borrar' recurso.pk %}" class="btn btn-danger bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg px-3 py-1">Borrar</a>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-10 text-center">
+      <p class="text-gray-700 mb-4">Aún no has publicado nada</p>
+      <a href="{% url 'resources:recurso_create' %}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-5 py-2">
+        Publicar recurso
+      </a>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}
