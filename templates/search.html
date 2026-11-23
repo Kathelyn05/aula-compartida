@@ -10,17 +10,19 @@
     <input type="text" name="q" value="{{ filtros.q }}" placeholder="Palabra clave…"
            class="md:col-span-2 rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
 
-    <select name="carrera" class="rounded-lg border border-gray-300 px-3 py-2">
+    <select name="carrera" id="filtro-carrera" class="rounded-lg border border-gray-300 px-3 py-2">
       <option value="">Carrera</option>
       {% for c in carreras %}
         <option value="{{ c.id }}" {% if filtros.carrera == c.id|stringformat:'s' %}selected{% endif %}>{{ c.nombre }}</option>
       {% endfor %}
     </select>
 
-    <select name="asignatura" class="rounded-lg border border-gray-300 px-3 py-2">
+    <select name="asignatura" id="filtro-asignatura" class="rounded-lg border border-gray-300 px-3 py-2">
       <option value="">Asignatura</option>
       {% for a in asignaturas %}
-        <option value="{{ a.id }}" {% if filtros.asignatura == a.id|stringformat:'s' %}selected{% endif %}>{{ a.nombre }}</option>
+        <option value="{{ a.id }}" data-carrera="{{ a.ano.carrera_id }}" {% if filtros.asignatura == a.id|stringformat:'s' %}selected{% endif %}>
+          {{ a.nombre }} ({{ a.ano.carrera.nombre }})
+        </option>
       {% endfor %}
     </select>
 
@@ -82,4 +84,32 @@
     </div>
   {% endif %}
 </section>
+
+<script>
+  const carreraSelect = document.getElementById('filtro-carrera');
+  const asignaturaSelect = document.getElementById('filtro-asignatura');
+  const asignaturas = Array.from(asignaturaSelect.querySelectorAll('option[data-carrera]'));
+
+  function filtrarAsignaturas() {
+    const carreraId = carreraSelect.value;
+    const seleccionActual = asignaturaSelect.value;
+    let sigueVisible = false;
+
+    asignaturas.forEach((option) => {
+      const visible = !carreraId || option.dataset.carrera === carreraId;
+      option.hidden = !visible;
+      option.disabled = !visible;
+      if (visible && option.value === seleccionActual) {
+        sigueVisible = true;
+      }
+    });
+
+    if (seleccionActual && !sigueVisible) {
+      asignaturaSelect.value = '';
+    }
+  }
+
+  carreraSelect.addEventListener('change', filtrarAsignaturas);
+  filtrarAsignaturas();
+</script>
 {% endblock %}
