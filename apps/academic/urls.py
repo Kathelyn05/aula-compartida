@@ -1,3 +1,11 @@
 from django.urls import path
 
-urlpatterns = []
+from .views import AsignaturaDetailView, CarreraDetailView, CarreraListView
+
+app_name = 'academic'
+
+urlpatterns = [
+    path('carreras/', CarreraListView.as_view(), name='carrera_list'),
+    path('carreras/<int:pk>/', CarreraDetailView.as_view(), name='carrera_detail'),
+    path('asignaturas/<int:pk>/', AsignaturaDetailView.as_view(), name='asignatura_detail'),
+]
