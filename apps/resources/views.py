@@ -73,7 +73,7 @@ class RecursoCreateView(LoginRequiredMixin, View):
                     tipo=form.cleaned_data['tipo'],
                     asignatura=form.cleaned_data['asignatura'],
                     autor=request.user,
-                    estado=Recurso.Estado.APROBADO,
+                    estado=Recurso.Estado.PENDIENTE,
                 )
                 Archivo.objects.create(
                     recurso=recurso,
