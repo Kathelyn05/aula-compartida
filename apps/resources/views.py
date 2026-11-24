@@ -4,7 +4,8 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError, transaction
-from django.db.models import Avg
+from django.db.models import Avg, F
+from django.http import FileResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views import View
@@ -169,3 +170,20 @@ class RecursoDetailView(DetailView):
             Recurso.Estado.RECHAZADO,
         )
         return self.render_to_response(context)
+
+
+class DescargarArchivoView(View):
+    def get(self, request, pk):
+        archivo = get_object_or_404(
+            Archivo.objects.select_related('recurso'),
+            pk=pk,
+            recurso__estado=Recurso.Estado.APROBADO,
+        )
+        Recurso.objects.filter(pk=archivo.recurso_id).update(
+            contador_descargas=F('contador_descargas') + 1
+        )
+        return FileResponse(
+            archivo.archivo.open('rb'),
+            as_attachment=True,
+            filename=archivo.nombre_original,
+        )
