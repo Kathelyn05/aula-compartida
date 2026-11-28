@@ -1,6 +1,6 @@
 {% load interaction_tags %}
-{% datos_interacciones recurso as datos %}
 {% if user.is_authenticated %}
+  {% datos_interacciones recurso as datos %}
   {% include 'interactions/messages.html' with tag='favorito' %}
   <form method="post" action="{% url 'interactions:toggle_favorito' recurso.id %}">
     {% csrf_token %}
@@ -9,4 +9,9 @@
       {% if datos.es_favorito %}Quitar de favoritos{% else %}Añadir a favoritos{% endif %}
     </button>
   </form>
+{% else %}
+  <p class="text-sm text-gray-600">
+    Inicia sesión para guardar en favoritos.
+    <a href="{% url 'login' %}" class="text-blue-600 hover:text-blue-800">Iniciar sesión</a>
+  </p>
 {% endif %}

@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
@@ -52,6 +53,18 @@ def comentar(request, recurso_id):
         activo=True,
     )
     messages.success(request, 'Tu comentario se ha publicado.', extra_tags='comentario')
+    return redirect('resources:recurso_detalle', pk=recurso_id)
+
+
+@login_required
+@require_POST
+def borrar_comentario(request, comentario_id):
+    comentario = get_object_or_404(Comentario, pk=comentario_id)
+    if comentario.usuario_id != request.user.pk:
+        raise PermissionDenied
+    recurso_id = comentario.recurso_id
+    comentario.delete()
+    messages.success(request, 'Comentario eliminado.')
     return redirect('resources:recurso_detalle', pk=recurso_id)
 
 

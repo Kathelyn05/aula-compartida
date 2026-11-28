@@ -11,9 +11,18 @@
             <span class="font-medium text-gray-900">
               {{ comentario.usuario.get_full_name|default:comentario.usuario.email }}
             </span>
-            <time class="text-sm text-gray-500" datetime="{{ comentario.fecha|date:'c' }}">
-              {{ comentario.fecha|date:"d M Y H:i" }}
-            </time>
+            <div class="flex items-center gap-3">
+              <time class="text-sm text-gray-500" datetime="{{ comentario.fecha|date:'c' }}">
+                {{ comentario.fecha|date:"d M Y H:i" }}
+              </time>
+              {% if user == comentario.usuario %}
+                <form method="post" action="{% url 'interactions:comentario_borrar' comentario.id %}">
+                  {% csrf_token %}
+                  <button type="submit" onclick="return confirm('¿Eliminar este comentario?')"
+                          class="text-sm font-medium text-red-600 hover:text-red-800">Eliminar</button>
+                </form>
+              {% endif %}
+            </div>
           </div>
           <p class="whitespace-pre-line text-gray-700">{{ comentario.texto }}</p>
         </article>

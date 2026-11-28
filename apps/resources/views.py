@@ -110,11 +110,17 @@ class RecursoUpdateView(LoginRequiredMixin, UpdateView):
 
     def form_valid(self, form):
         archivo = form.cleaned_data.get('archivo')
+        comentarios_eliminados = 0
+        valoraciones_eliminadas = 0
         with transaction.atomic():
             recurso = form.save()
             if archivo:
                 hash_sha256 = calcular_hash_sha256(archivo)
                 archivo_anterior = recurso.archivos.first()
+                archivo_cambiado = (
+                    archivo_anterior is None
+                    or archivo_anterior.hash_sha256 != hash_sha256
+                )
                 if archivo_anterior:
                     archivo_anterior.archivo.delete(save=False)
                     archivo_anterior.delete()
@@ -126,6 +132,15 @@ class RecursoUpdateView(LoginRequiredMixin, UpdateView):
                     tamano_bytes=archivo.size or 0,
                     hash_sha256=hash_sha256,
                 )
+                if archivo_cambiado:
+                    comentarios_eliminados, _ = recurso.comentarios.all().delete()
+                    valoraciones_eliminadas, _ = recurso.valoraciones.all().delete()
+        if comentarios_eliminados or valoraciones_eliminadas:
+            messages.warning(
+                self.request,
+                f'Se cambió el archivo: se eliminaron {comentarios_eliminados} comentario(s) '
+                f'y {valoraciones_eliminadas} valoración(es) anteriores.',
+            )
         messages.success(self.request, 'Recurso actualizado correctamente')
         return redirect('resources:recurso_detalle', pk=recurso.pk)
 

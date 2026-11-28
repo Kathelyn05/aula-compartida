@@ -51,6 +51,7 @@
         <p class="mt-1 text-xs text-gray-500">{{ form.archivo.help_text }}</p>
       {% endif %}
       <p class="mt-1 text-xs text-gray-500">Formatos: PDF, DOC, DOCX, PPT, PPTX, JPG, JPEG, PNG. Máx. 20 MB.</p>
+      <p class="mt-1 text-xs text-amber-700">Si subes un archivo distinto, se eliminarán los comentarios y valoraciones anteriores.</p>
       {% for error in form.archivo.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}
     </div>
 

@@ -1,11 +1,11 @@
 {% load interaction_tags %}
 {% datos_interacciones recurso as datos %}
-{% if user.is_authenticated %}
-  <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-    <h2 class="text-lg font-semibold text-gray-900 mb-4">Reportar recurso</h2>
+<section class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+  <h2 class="text-lg font-semibold text-gray-900 mb-4">Reportar recurso</h2>
 
-    {% include 'interactions/messages.html' with tag='reporte' %}
+  {% include 'interactions/messages.html' with tag='reporte' %}
 
+  {% if user.is_authenticated %}
     <form method="post" action="{% url 'interactions:reportar' recurso.id %}" class="space-y-4">
       {% csrf_token %}
 
@@ -29,5 +29,10 @@
         Enviar reporte
       </button>
     </form>
-  </section>
-{% endif %}
+  {% else %}
+    <p class="text-sm text-gray-600">
+      Inicia sesión para reportar.
+      <a href="{% url 'login' %}" class="text-blue-600 hover:text-blue-800">Iniciar sesión</a>
+    </p>
+  {% endif %}
+</section>
