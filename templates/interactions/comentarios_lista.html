@@ -1,0 +1,25 @@
+{% load interaction_tags %}
+{% datos_interacciones recurso as datos %}
+<section class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+  <h2 class="text-lg font-semibold text-gray-900 mb-4">Comentarios</h2>
+
+  <div class="space-y-4">
+    {% for comentario in datos.comentarios %}
+      {% if comentario.activo %}
+        <article class="rounded-lg border border-gray-200 p-4">
+          <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <span class="font-medium text-gray-900">
+              {{ comentario.usuario.get_full_name|default:comentario.usuario.email }}
+            </span>
+            <time class="text-sm text-gray-500" datetime="{{ comentario.fecha|date:'c' }}">
+              {{ comentario.fecha|date:"d M Y H:i" }}
+            </time>
+          </div>
+          <p class="whitespace-pre-line text-gray-700">{{ comentario.texto }}</p>
+        </article>
+      {% endif %}
+    {% empty %}
+      <p class="text-sm text-gray-500">Todavía no hay comentarios.</p>
+    {% endfor %}
+  </div>
+</section>

@@ -1,0 +1,12 @@
+{% load interaction_tags %}
+{% datos_interacciones recurso as datos %}
+{% if user.is_authenticated %}
+  {% include 'interactions/messages.html' with tag='favorito' %}
+  <form method="post" action="{% url 'interactions:toggle_favorito' recurso.id %}">
+    {% csrf_token %}
+    <button type="submit" aria-pressed="{{ datos.es_favorito|yesno:'true,false' }}"
+            class="rounded-lg border px-4 py-2 text-sm font-medium {% if datos.es_favorito %}border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100{% else %}border-blue-600 bg-blue-600 text-white hover:bg-blue-700{% endif %}">
+      {% if datos.es_favorito %}Quitar de favoritos{% else %}Añadir a favoritos{% endif %}
+    </button>
+  </form>
+{% endif %}
