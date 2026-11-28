@@ -15,6 +15,7 @@ db.sqlite3
 
 # Archivos estáticos recolectados (se generan en despliegue)
 staticfiles/
+media/
 
 # Entorno de editor
 .vscode/
