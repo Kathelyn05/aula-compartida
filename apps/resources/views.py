@@ -1,13 +1,15 @@
 import hashlib
 
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError, transaction
 from django.db.models import Avg, F
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse_lazy
 from django.views import View
-from django.views.generic import DetailView
+from django.views.generic import DeleteView, DetailView, ListView, UpdateView
 
 from .forms import RecursoForm
 from .models import Archivo, Recurso
@@ -19,6 +21,33 @@ def calcular_hash_sha256(uploaded_file):
         sha.update(chunk)
     uploaded_file.seek(0)
     return sha.hexdigest()
+
+
+class RecursoEditForm(RecursoForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['archivo'].required = False
+        self.fields['archivo'].help_text = 'Deja vacío para mantener el archivo actual.'
+
+    def clean_archivo(self):
+        archivo = self.cleaned_data.get('archivo')
+        if not archivo:
+            return None
+        return super().clean_archivo()
+
+
+class MisRecursosView(LoginRequiredMixin, ListView):
+    model = Recurso
+    template_name = 'resources/mis_recursos.html'
+    context_object_name = 'recursos'
+
+    def get_queryset(self):
+        return (
+            Recurso.objects
+            .filter(autor=self.request.user)
+            .select_related('asignatura', 'asignatura__ano', 'asignatura__ano__carrera')
+            .order_by('-fecha_creacion')
+        )
 
 
 class RecursoCreateView(LoginRequiredMixin, View):
@@ -45,7 +74,7 @@ class RecursoCreateView(LoginRequiredMixin, View):
                     tipo=form.cleaned_data['tipo'],
                     asignatura=form.cleaned_data['asignatura'],
                     autor=request.user,
-                    estado=Recurso.Estado.APROBADO,
+                    estado=Recurso.Estado.PENDIENTE,
                 )
                 Archivo.objects.create(
                     recurso=recurso,
@@ -66,6 +95,55 @@ class RecursoCreateView(LoginRequiredMixin, View):
                 'Ya existe un archivo idéntico en el sistema. ¿Seguro que quieres publicarlo de nuevo?',
             )
         return redirect('core:home')
+
+
+class RecursoUpdateView(LoginRequiredMixin, UpdateView):
+    model = Recurso
+    form_class = RecursoEditForm
+    template_name = 'resources/recurso_editar.html'
+
+    def get_object(self, queryset=None):
+        recurso = super().get_object(queryset)
+        if recurso.autor_id != self.request.user.pk:
+            raise PermissionDenied
+        return recurso
+
+    def form_valid(self, form):
+        archivo = form.cleaned_data.get('archivo')
+        with transaction.atomic():
+            recurso = form.save()
+            if archivo:
+                hash_sha256 = calcular_hash_sha256(archivo)
+                archivo_anterior = recurso.archivos.first()
+                if archivo_anterior:
+                    archivo_anterior.archivo.delete(save=False)
+                    archivo_anterior.delete()
+                Archivo.objects.create(
+                    recurso=recurso,
+                    archivo=archivo,
+                    nombre_original=archivo.name,
+                    tipo_mime=getattr(archivo, 'content_type', '') or '',
+                    tamano_bytes=archivo.size or 0,
+                    hash_sha256=hash_sha256,
+                )
+        messages.success(self.request, 'Recurso actualizado correctamente')
+        return redirect('resources:recurso_detalle', pk=recurso.pk)
+
+
+class RecursoDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Recurso
+    template_name = 'resources/recurso_confirm_delete.html'
+    success_url = reverse_lazy('core:home')
+
+    def test_func(self):
+        recurso = self.get_object()
+        return self.request.user == recurso.autor
+
+    def form_valid(self, form):
+        for archivo in self.object.archivos.all():
+            archivo.archivo.delete(save=False)
+        messages.success(self.request, 'Recurso eliminado')
+        return super().form_valid(form)
 
 
 class RecursoDetailView(DetailView):
