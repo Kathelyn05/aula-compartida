@@ -9,9 +9,11 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
+import os
 from datetime import timedelta
 from pathlib import Path
 
+import dj_database_url
 import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -24,12 +26,25 @@ environ.Env.read_env(BASE_DIR / '.env')
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-@rkhs2&g3d*eg2vz1bxo4=&iu60u8pb1@j17_@7sy*i2)zcs-@'
+SECRET_KEY = env(
+    'SECRET_KEY',
+    default='django-insecure-@rkhs2&g3d*eg2vz1bxo4=&iu60u8pb1@j17_@7sy*i2)zcs-@',
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env.bool('DEBUG', default=True)
 
-ALLOWED_HOSTS = []
+if DEBUG:
+    ALLOWED_HOSTS = []
+    CSRF_TRUSTED_ORIGINS = []
+else:
+    ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[])
+    CSRF_TRUSTED_ORIGINS = env.list(
+        'CSRF_TRUSTED_ORIGINS',
+        default=['https://*.onrender.com'],
+    )
+    if 'https://*.onrender.com' not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append('https://*.onrender.com')
 
 
 # Application definition
@@ -53,6 +68,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -85,16 +101,25 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-'default': {
-'ENGINE': 'django.db.backends.postgresql',
-'NAME': env('DB_NAME'),
-'USER': env('DB_USER'),
-'PASSWORD': env('DB_PASSWORD'),
-'HOST': env('DB_HOST'),
-'PORT': env('DB_PORT'),
-}
-}
+DATABASE_URL = env('DATABASE_URL', default='')
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+        )
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': env('DB_NAME'),
+            'USER': env('DB_USER'),
+            'PASSWORD': env('DB_PASSWORD'),
+            'HOST': env('DB_HOST'),
+            'PORT': env('DB_PORT'),
+        }
+    }
 
 
 # Password validation
@@ -132,8 +157,32 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+    },
+}
+
+if not DEBUG:
+    AWS_ACCESS_KEY_ID = os.getenv('B2_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = os.getenv('B2_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = os.getenv('B2_BUCKET_NAME')
+    AWS_S3_ENDPOINT_URL = os.getenv('B2_ENDPOINT_URL')
+    AWS_S3_REGION_NAME = os.getenv('B2_REGION_NAME')
+    AWS_S3_SIGNATURE_VERSION = 's3v4'
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_QUERYSTRING_AUTH = False
+    MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/'
+    STORAGES['default'] = {
+        'BACKEND': 'storages.backends.s3boto3.S3Boto3Storage',
+    }
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
