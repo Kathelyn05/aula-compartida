@@ -17,5 +17,5 @@ urlpatterns = [
     path('<int:pk>/editar/', RecursoUpdateView.as_view(), name='recurso_editar'),
     path('<int:pk>/borrar/', RecursoDeleteView.as_view(), name='recurso_borrar'),
     path('<int:pk>/', RecursoDetailView.as_view(), name='recurso_detalle'),
-    path('archivos/<int:pk>/descargar/', ArchivoDownloadView.as_view(), name='archivo_download'),
+    path('archivos/<int:pk>/descargar/', ArchivoDownloadView.as_view(), name='archivo_descargar'),
 ]

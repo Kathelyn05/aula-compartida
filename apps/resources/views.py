@@ -88,13 +88,13 @@ class RecursoCreateView(LoginRequiredMixin, View):
             form.add_error('archivo', 'Archivo duplicado en este recurso.')
             return render(request, self.template_name, {'form': form})
 
-        messages.success(request, 'Recurso publicado correctamente.')
+        messages.success(request, 'Recurso enviado para revisión.')
         if duplicado_global:
             messages.warning(
                 request,
-                'Ya existe un archivo idéntico en el sistema. ¿Seguro que quieres publicarlo de nuevo?',
+                'Ya existe un archivo idéntico en el sistema.',
             )
-        return redirect('core:home')
+        return redirect('resources:mis_recursos')
 
 
 class RecursoUpdateView(LoginRequiredMixin, UpdateView):

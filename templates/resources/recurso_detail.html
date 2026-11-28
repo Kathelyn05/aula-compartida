@@ -68,7 +68,7 @@
                 <p class="font-medium text-gray-900">{{ archivo.nombre_original }}</p>
                 <p class="text-sm text-gray-500">{{ archivo.tamano_bytes|filesizeformat }}</p>
               </div>
-              <a href="{% url 'resources:archivo_download' archivo.pk %}"
+              <a href="{% url 'resources:archivo_descargar' archivo.pk %}"
                  class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg px-4 py-2">
                 Descargar
               </a>
